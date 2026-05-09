@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environments
+.venv/
+env/
+venv/
+ENV/
+
+# Downloads
+downloads/
+*.mp3
+*.m4a
+*.webm
+
+# Spotify Backups (Personal Data)
+Spotify-Exel-Files-Backup/*.csv
+!Spotify-Exel-Files-Backup/.gitkeep
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Large Binaries
+ffmpeg.exe
+ffplay.exe
+ffprobe.exe
+# Exclude all exes except our main script (if compiled)
+*.exe
+!SpotifyToMP3.exe
+
+# PyInstaller build artifacts
+build/
+dist/
+*.spec
