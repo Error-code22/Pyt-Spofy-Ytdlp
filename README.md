@@ -57,5 +57,10 @@ To handle massive libraries (10k+ songs) without getting your IP banned, we impl
 - **Copyright**: This tool is for **educational purposes and personal use only**. Please respect the copyrights of the artists. By using this tool, you agree to take full responsibility for the content you download.
 - **Privacy**: We never see your data. Your CSV files stay local on your machine.
 
+## 🙏 Special Thanks
+
+- **yt-dlp team**: This project would literally be impossible without the incredible, tireless work of the [yt-dlp](https://github.com/yt-dlp/yt-dlp) contributors. They are the giants whose shoulders we stand on.
+- **Firebase Studio**: For providing the spark that brought this Human/AI partnership together.
+
 ---
 *Created with ❤️ by a Human/AI Partnership.*
