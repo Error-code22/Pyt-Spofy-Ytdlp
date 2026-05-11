@@ -16,6 +16,10 @@ downloads/*
 *.m4a
 *.webm
 
+# yt-dlp runtime files (generated during use, not part of the repo)
+downloaded_songs.txt
+failed_songs.txt
+
 # Spotify Backups (Personal Data)
 Spotify-Exel-Files-Backup/*.csv
 !Spotify-Exel-Files-Backup/.gitkeep

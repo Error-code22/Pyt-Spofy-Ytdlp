@@ -190,7 +190,9 @@ def embed_metadata(file_path, metadata, image_path=None):
         return False, str(e)
 
 def download_track(row, output_dir):
-    """Downloads and tags a single track atomically."""
+    """Downloads and tags a single track atomically.
+    Returns a tuple: ('ok' | 'skipped' | 'failed', display_name, error_msg)
+    """
     csv_track_name = row.get('Track Name', 'Unknown Track')
     artists = row.get('Artist Name(s)', 'Unknown Artist')
     album = row.get('Album Name', '')
@@ -199,6 +201,7 @@ def download_track(row, output_dir):
     release_date = row.get('Album Release Date', '')
     track_num = row.get('Track Number', '1')
     year = release_date.split('-')[0] if release_date else ""
+    display_name = f"{artists} - {csv_track_name}"
 
     # Check for existing file BEFORE making any API calls to avoid rate limits
     safe_filename = sanitize_filename(f"{artists} - {csv_track_name}")
@@ -208,7 +211,7 @@ def download_track(row, output_dir):
 
     if os.path.exists(final_mp3):
         print(f"  [-] Skipping: {csv_track_name}")
-        return
+        return ('skipped', display_name, None)
 
     # Now that we know we need to download, get high-res metadata
     track_name = csv_track_name
@@ -218,6 +221,7 @@ def download_track(row, output_dir):
     if oembed:
         track_name = oembed.get('title', csv_track_name)
         image_url = oembed.get('thumbnail_url', csv_image_url)
+        display_name = f"{artists} - {track_name}"
 
     ydl_opts = {
         'format': 'bestaudio/best',
@@ -261,16 +265,20 @@ def download_track(row, output_dir):
         if meta_success and os.path.exists(temp_mp3):
             os.rename(temp_mp3, final_mp3)
             print(f"  [+] Finished: {track_name} | Art: {img_status}")
+            return ('ok', display_name, None)
         else:
             if os.path.exists(temp_mp3):
                 os.remove(temp_mp3)
-                with open(FAILED_LOG, "a", encoding="utf-8") as f:
-                    f.write(f"{artists} - {track_name} | Error: {meta_msg}\n")
+            with open(FAILED_LOG, "a", encoding="utf-8") as f:
+                f.write(f"{artists} - {track_name} | Error: {meta_msg}\n")
+            return ('failed', display_name, meta_msg)
 
     except Exception as e:
         if os.path.exists(temp_mp3): os.remove(temp_mp3)
+        err = str(e)
         with open(FAILED_LOG, "a", encoding="utf-8") as f:
-            f.write(f"{artists} - {track_name} | Error: {str(e)}\n")
+            f.write(f"{artists} - {track_name} | Error: {err}\n")
+        return ('failed', display_name, err)
 
 def process_csv(csv_path, base_output_dir, threads=None):
     """Processes a single CSV file."""
@@ -290,9 +298,41 @@ def process_csv(csv_path, base_output_dir, threads=None):
     try:
         with open(csv_path, mode='r', encoding='utf-8') as f:
             reader = list(csv.DictReader(f))
-            with ThreadPoolExecutor(max_workers=threads) as executor:
-                for row in reader:
-                    executor.submit(download_track, row, playlist_dir)
+
+        futures = []
+        with ThreadPoolExecutor(max_workers=threads) as executor:
+            for row in reader:
+                futures.append(executor.submit(download_track, row, playlist_dir))
+
+        # Collect results for summary
+        ok, skipped, failed = [], [], []
+        for future in futures:
+            try:
+                status, name, err = future.result()
+                if status == 'ok':
+                    ok.append(name)
+                elif status == 'skipped':
+                    skipped.append(name)
+                else:
+                    failed.append((name, err))
+            except Exception as e:
+                failed.append(('Unknown', str(e)))
+
+        # Print per-playlist summary
+        print(f"\n{'='*52}")
+        print(f"  📋 SUMMARY: {playlist_name}")
+        print(f"{'='*52}")
+        print(f"  ✅ Downloaded : {len(ok)}")
+        print(f"  [-] Skipped   : {len(skipped)} (already existed)")
+        print(f"  ❌ Failed     : {len(failed)}")
+        if failed:
+            print(f"\n  Failed tracks:")
+            for name, err in failed:
+                reason = err[:60] + '...' if err and len(err) > 60 else (err or 'Unknown error')
+                print(f"    • {name}")
+                print(f"      ↳ {reason}")
+        print(f"{'='*52}\n")
+
     except Exception as e:
         print(f"Error: {e}")
 
