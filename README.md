@@ -1,5 +1,8 @@
 # 🎵 Spotify to MP3 Downloader v1.2 (Portable)
 
+> **"The ultimate digital prepper tool for your music collection."**
+> High-speed downloads, official Spotify metadata, and a stealthy engine that keeps you under the radar. 
+
 A professional, high-speed tool to download your Spotify playlists as high-quality MP3s with official metadata and high-resolution cover art. **No Python installation required.**
 
 ## 📦 What's in the Box?
@@ -7,17 +10,17 @@ A professional, high-speed tool to download your Spotify playlists as high-quali
 - `SpotifyToMP3/`: The application folder.
 - `SpotifyToMP3.exe`: The main application (found inside the folder).
 - `ffmpeg.exe` & `ffprobe.exe`: The engines that handle high-quality audio conversion.
-- `Spotify-Exel-Files-Backup/`: Place your Spotify CSV exports here.
+- `Spotify-Exel-Files-Backup/`: Place your Spotify exports (Excel/CSV) here.
 - `config.txt`: Remembers your custom download directory.
 
 ## 🚀 Quick Start
 
 1.  **Get Your Playlists**:
-    - Go to [Exportify](https://watsonbox.github.io/exportify/).
+    - Go to [Exportify.app](https://exportify.app/) (or the [GitHub mirror](https://watsonbox.github.io/exportify/)).
     - Log in with your Spotify account.
-    - Export your playlists or liked songs as **CSV** files.
-2.  **Download & Extract**: Extract the release ZIP of this tool to a folder.
-3.  **Add Your Playlists**: Copy those CSV files into the `Spotify-Exel-Files-Backup` folder.
+    - Export your playlists or liked songs. **Choose the CSV format** (often referred to as the Excel format in Exportify).
+2.  **Add Your Playlists**: Copy those downloaded files into the `Spotify-Exel-Files-Backup` folder in the root of this project.
+3.  **Download & Extract**: Extract the release ZIP of this tool to a folder.
 4.  **Run**: Open the `SpotifyToMP3` folder and double-click `SpotifyToMP3.exe`.
 5.  **Customize**: Use the **[D]** option to select your download folder.
 6.  **Select**: Choose a playlist or select **[A]** to download everything!

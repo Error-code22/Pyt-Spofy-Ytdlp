@@ -1,3 +1,19 @@
+import os
+import sys
+import re
+import requests
+import subprocess
+import time
+import zipfile
+import io
+import csv
+import json
+from concurrent.futures import ThreadPoolExecutor
+from yt_dlp import YoutubeDL
+from tqdm import tqdm
+from mutagen.mp3 import MP3
+from mutagen.id3 import ID3, TIT2, TPE1, TALB, TYER, TRCK, APIC, error
+
 # --- Configuration ---
 MAX_THREADS = 3  # Stable for both speed and avoiding bans
 CONFIG_FILE = "config.txt"
@@ -290,31 +306,47 @@ def show_menu():
     current_out = load_config()
 
     if not os.path.exists(backup_dir):
-        print(f"Error: Directory '{backup_dir}' not found.")
-        return None, current_out
+        os.makedirs(backup_dir)
 
-    csv_files = sorted([f for f in os.listdir(backup_dir) if f.endswith('.csv')])
-    
     while True:
+        csv_files = sorted([f for f in os.listdir(backup_dir) if f.endswith('.csv')])
+        
         clear_screen()
         print("====================================================")
         print("         SPOTIFY TO MP3 DOWNLOADER (yt-dlp)         ")
         print("====================================================")
         print(f" Current Output: {os.path.abspath(current_out)}")
         print("====================================================")
-        print("\nAvailable Playlists:")
-        for i, file in enumerate(csv_files, 1):
-            print(f"  [{i:02}] {file}")
         
-        print("\n  [A] Download All Playlists")
-        print("  [D] Change Download Directory")
-        print("  [Q] Quit")
+        if not csv_files:
+            print("\n  [!] NO PLAYLISTS FOUND")
+            print("  --------------------------------------------------")
+            print("  1. Go to: https://exportify.app/")
+            print("     (or: https://exportify.net/)")
+            print("  2. Export your playlists as CSV files.")
+            print(f"  3. Copy them to: {backup_dir}\\")
+            print("  --------------------------------------------------")
+            print("\n  [R] Refresh List (after copying files)")
+            print("  [D] Change Download Directory")
+            print("  [Q] Quit")
+        else:
+            print("\nAvailable Playlists:")
+            for i, file in enumerate(csv_files, 1):
+                print(f"  [{i:02}] {file}")
+            
+            print("\n  [A] Download All Playlists")
+            print("  [D] Change Download Directory")
+            print("  [R] Refresh List")
+            print("  [Q] Quit")
+        
         print("\n====================================================")
         
         choice = input("\nSelect an option: ").strip().lower()
         
         if choice == 'q':
             sys.exit()
+        elif choice == 'r':
+            continue
         elif choice == 'd':
             import tkinter as tk
             from tkinter import filedialog
@@ -325,9 +357,9 @@ def show_menu():
                 current_out = os.path.normpath(new_path)
                 save_config(current_out)
                 time.sleep(1)
-        elif choice == 'a':
+        elif choice == 'a' and csv_files:
             return [os.path.join(backup_dir, f) for f in csv_files], current_out
-        else:
+        elif csv_files:
             try:
                 idx = int(choice) - 1
                 if 0 <= idx < len(csv_files):
