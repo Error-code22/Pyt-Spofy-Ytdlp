@@ -237,6 +237,9 @@ def download_track(row, output_dir):
         }],
         'quiet': True,
         'no_warnings': True,
+        'noprogress': True,      # Suppress download % lines — prevents terminal freeze
+        'retries': 10,           # Retry on connection resets before giving up
+        'fragment_retries': 10,  # Retry individual fragments (helps with ConnectionResetError)
     }
 
     try:
