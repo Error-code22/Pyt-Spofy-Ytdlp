@@ -10,7 +10,8 @@ venv/
 ENV/
 
 # Downloads
-downloads/
+downloads/*
+!downloads/.gitkeep
 *.mp3
 *.m4a
 *.webm
@@ -27,9 +28,8 @@ Thumbs.db
 ffmpeg.exe
 ffplay.exe
 ffprobe.exe
-# Exclude all exes except our main script (if compiled)
+# Ignore the EXE (user handles releases manually)
 *.exe
-!SpotifyToMP3.exe
 
 # PyInstaller build artifacts
 build/
