@@ -16,6 +16,7 @@ from mutagen.id3 import ID3, TIT2, TPE1, TALB, TYER, TRCK, APIC, error
 
 # --- Configuration ---
 MAX_THREADS = 3  # Stable for both speed and avoiding bans
+RISK_MODE_THREADS = 6  # Faster but higher chance of rate-limiting/bans
 CONFIG_FILE = "config.txt"
 FAILED_LOG = "failed_songs.txt"
 DOWNLOAD_ARCHIVE = "downloaded_songs.txt"
@@ -237,8 +238,8 @@ def download_track(row, output_dir):
     try:
         search_query = f"{track_name} {artists}"
         with YoutubeDL(ydl_opts) as ydl:
-            # ytmsearch ensures we get official audio/album versions rather than music videos
-            ydl.download([f"ytmsearch1:{search_query}"])
+            # ytsearch1 uses standard YouTube search — works across all yt-dlp versions/builds
+            ydl.download([f"ytsearch1:{search_query}"])
         
         img_status = "❌"
         if image_url:
@@ -271,8 +272,11 @@ def download_track(row, output_dir):
         with open(FAILED_LOG, "a", encoding="utf-8") as f:
             f.write(f"{artists} - {track_name} | Error: {str(e)}\n")
 
-def process_csv(csv_path, base_output_dir):
+def process_csv(csv_path, base_output_dir, threads=None):
     """Processes a single CSV file."""
+    if threads is None:
+        threads = MAX_THREADS
+
     playlist_name = sanitize_filename(os.path.splitext(os.path.basename(csv_path))[0])
     playlist_dir = os.path.join(base_output_dir, playlist_name)
     
@@ -281,11 +285,12 @@ def process_csv(csv_path, base_output_dir):
 
     print(f"\n>>> Playlist: {playlist_name}")
     print(f">>> Folder: {playlist_dir}")
+    print(f">>> Threads: {threads} {'⚡ RISK MODE' if threads >= RISK_MODE_THREADS else '✅ Safe Mode'}")
 
     try:
         with open(csv_path, mode='r', encoding='utf-8') as f:
             reader = list(csv.DictReader(f))
-            with ThreadPoolExecutor(max_workers=MAX_THREADS) as executor:
+            with ThreadPoolExecutor(max_workers=threads) as executor:
                 for row in reader:
                     executor.submit(download_track, row, playlist_dir)
     except Exception as e:
@@ -304,6 +309,7 @@ def save_config(path):
 def show_menu():
     backup_dir = "Spotify-Exel-Files-Backup"
     current_out = load_config()
+    risk_mode = False  # Default: safe mode (3 threads)
 
     if not os.path.exists(backup_dir):
         os.makedirs(backup_dir)
@@ -316,6 +322,8 @@ def show_menu():
         print("         SPOTIFY TO MP3 DOWNLOADER (yt-dlp)         ")
         print("====================================================")
         print(f" Current Output: {os.path.abspath(current_out)}")
+        mode_label = "⚡ RISK MODE (6 threads)" if risk_mode else "✅ Safe Mode (3 threads)"
+        print(f" Download Mode : {mode_label}")
         print("====================================================")
         
         if not csv_files:
@@ -328,6 +336,7 @@ def show_menu():
             print("  --------------------------------------------------")
             print("\n  [R] Refresh List (after copying files)")
             print("  [D] Change Download Directory")
+            print("  [X] Toggle Risk Mode (6 simultaneous downloads)")
             print("  [Q] Quit")
         else:
             print("\nAvailable Playlists:")
@@ -336,16 +345,22 @@ def show_menu():
             
             print("\n  [A] Download All Playlists")
             print("  [D] Change Download Directory")
+            print("  [X] Toggle Risk Mode (6 simultaneous downloads)")
             print("  [R] Refresh List")
             print("  [Q] Quit")
         
         print("\n====================================================")
+        if risk_mode:
+            print("  ⚠  Risk Mode ON: faster but may trigger rate limits")
         
         choice = input("\nSelect an option: ").strip().lower()
         
         if choice == 'q':
             sys.exit()
         elif choice == 'r':
+            continue
+        elif choice == 'x':
+            risk_mode = not risk_mode
             continue
         elif choice == 'd':
             import tkinter as tk
@@ -358,12 +373,14 @@ def show_menu():
                 save_config(current_out)
                 time.sleep(1)
         elif choice == 'a' and csv_files:
-            return [os.path.join(backup_dir, f) for f in csv_files], current_out
+            threads = RISK_MODE_THREADS if risk_mode else MAX_THREADS
+            return [os.path.join(backup_dir, f) for f in csv_files], current_out, threads
         elif csv_files:
             try:
                 idx = int(choice) - 1
                 if 0 <= idx < len(csv_files):
-                    return [os.path.join(backup_dir, csv_files[idx])], current_out
+                    threads = RISK_MODE_THREADS if risk_mode else MAX_THREADS
+                    return [os.path.join(backup_dir, csv_files[idx])], current_out, threads
             except ValueError:
                 pass
 
@@ -371,11 +388,11 @@ if __name__ == "__main__":
     if not check_ffmpeg():
         sys.exit(1)
 
-    selected_files, output_dir = show_menu()
+    selected_files, output_dir, threads = show_menu()
 
     if selected_files:
         for file in selected_files:
-            process_csv(file, output_dir)
+            process_csv(file, output_dir, threads)
         
         print("\n[!] All tasks finished.")
         try:

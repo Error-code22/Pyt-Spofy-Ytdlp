@@ -25,7 +25,12 @@ A professional, high-speed tool to download your Spotify playlists as high-quali
 5.  **Customize**: Use the **[D]** option to select your download folder.
 6.  **Select**: Choose a playlist or select **[A]** to download everything!
 
-## ✨ New in v1.3
+## ✨ New in v1.4
+
+- **Risk Mode (`[X]`)**: Toggle between Safe Mode (3 threads) and Risk Mode (6 threads) directly from the menu before starting any download. The current mode is always shown in the header so you know exactly what you're running.
+- **Per-Run Mode Label**: Each download session prints the active thread count and mode so there's no guesswork mid-run.
+
+## ✨ Previous v1.3 Features
 
 - **Interactive First-Run Guide**: If no playlists are found, the app now shows a step-by-step guide with direct links to Exportify.
 - **In-App Refresh**: Added a `[R] Refresh` option to the menu so you can add new CSV files without restarting the app.
@@ -56,15 +61,39 @@ This project is a unique collaboration between a **Human Visionary** and **Gemin
 
 To handle massive libraries (10k+ songs) without getting your IP banned, we implemented a **Stealth First** architecture:
 
-- **The 3-Worker Limit**: We strictly limit simultaneous downloads to 3. While 10+ might be faster, 3 is the "Goldilocks Zone" that maximizes speed while remaining under the radar of YouTube's anti-bot systems.
+- **The 3-Worker Limit (Safe Mode)**: We default to 3 simultaneous downloads — the "Goldilocks Zone" that maximizes speed while staying under the radar of YouTube's anti-bot systems.
+- **Risk Mode (6 Workers)**: Available via `[X]` in the menu. Doubles throughput but significantly increases the chance of triggering rate limits, temporary IP blocks, or account flags on both YouTube and Spotify. **Use at your own risk.**
 - **The "Hybrid" Engine**: We use **Spotify oEmbed** for 100% accurate metadata and **YouTube Music (`ytmsearch`)** for the audio. This ensures you get the official studio masters instead of messy music videos with cinematic intros.
 - **Human-Like Pauses**: The tool injects randomized 3-7 second pauses between songs to mimic a real person browsing.
 
-## ⚠️ Risks & Disclaimer
+## ⚠️ Risks, Liability & Disclaimer
 
-- **IP Bans**: While our "Stealth Mode" significantly reduces risk, downloading thousands of songs in a short window is always a cat-and-mouse game. Use this tool responsibly.
-- **Copyright**: This tool is for **educational purposes and personal use only**. Please respect the copyrights of the artists. By using this tool, you agree to take full responsibility for the content you download.
-- **Privacy**: We never see your data. Your CSV files stay local on your machine.
+**By using this tool — especially Risk Mode — you accept full and sole responsibility for any and all consequences. The developer(s) of this project accept zero liability.**
+
+### Risk Mode — What Can Actually Happen
+
+Running 6 simultaneous download threads is aggressive. Here's what you're signing up for:
+
+| Risk | Likelihood in Risk Mode | Notes |
+|---|---|---|
+| Temporary YouTube IP ban | High on large playlists | Usually lifts in 24–48 hours |
+| YouTube account flag/strike | Medium | Especially if logged in via cookies |
+| Spotify account flag | Low–Medium | Rapid oEmbed requests can trigger rate limits |
+| Spotify account suspension | Low | Possible if Spotify detects automated scraping patterns |
+| Permanent IP block from YouTube | Low | More likely on repeated aggressive sessions |
+
+### The Developer's Position
+
+- **I did not make you click `[X]`.**
+- If your YouTube account gets flagged, your Spotify account gets suspended, or your IP gets blocked — that is a consequence of a choice you made.
+- This tool does not store, transmit, or sell any of your data. Your CSV files and downloads stay entirely on your machine.
+- This tool is provided **as-is**, with no warranty, no guarantee of uptime, and no obligation to fix anything.
+
+### General Disclaimer
+
+- **Copyright**: This tool is for **personal and educational use only**. You are responsible for ensuring your use complies with the laws in your jurisdiction and the Terms of Service of Spotify and YouTube. Downloading copyrighted content without authorization may be illegal where you live.
+- **Privacy**: We never see your data. Everything stays local.
+- **No Endorsement**: This project is not affiliated with, endorsed by, or connected to Spotify, YouTube, or Google in any way.
 
 ## 🙏 Special Thanks
 
