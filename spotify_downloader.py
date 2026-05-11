@@ -17,10 +17,14 @@ from mutagen.id3 import ID3, TIT2, TPE1, TALB, TYER, TRCK, APIC, error
 # --- Configuration ---
 MAX_THREADS = 3  # Stable for both speed and avoiding bans
 RISK_MODE_THREADS = 6  # Faster but higher chance of rate-limiting/bans
+MIN_FREE_SPACE_MB = 200  # Stop downloading if free space drops below this
 CONFIG_FILE = "config.txt"
 FAILED_LOG = "failed_songs.txt"
 DOWNLOAD_ARCHIVE = "downloaded_songs.txt"
 FFMPEG_URL = "https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip"
+
+# Global stop flag — set to True when disk is full
+disk_full = False
 
 # Global session for connection pooling (faster/more reliable for 10k+ requests)
 session = requests.Session()
@@ -31,6 +35,32 @@ def get_base_path():
     except Exception:
         base_path = os.path.abspath(".")
     return base_path
+
+def get_free_space_mb(path):
+    """Returns free disk space in MB for the drive containing path."""
+    stat = os.statvfs(path) if hasattr(os, 'statvfs') else None
+    if stat:
+        return (stat.f_bavail * stat.f_frsize) / (1024 * 1024)
+    # Windows fallback
+    import ctypes
+    free_bytes = ctypes.c_ulonglong(0)
+    ctypes.windll.kernel32.GetDiskFreeSpaceExW(
+        ctypes.c_wchar_p(os.path.splitdrive(os.path.abspath(path))[0] + '\\'),
+        None, None, ctypes.pointer(free_bytes)
+    )
+    return free_bytes.value / (1024 * 1024)
+
+def check_disk_space(path):
+    """Returns True if there's enough space to continue, False if disk is too full."""
+    global disk_full
+    try:
+        free_mb = get_free_space_mb(path)
+        if free_mb < MIN_FREE_SPACE_MB:
+            disk_full = True
+            return False
+    except Exception:
+        pass  # If we can't check, let it try
+    return True
 
 def clear_screen():
     os.system('cls' if os.name == 'nt' else 'clear')
@@ -213,6 +243,10 @@ def download_track(row, output_dir):
         print(f"  [-] Skipping: {csv_track_name}")
         return ('skipped', display_name, None)
 
+    # Check disk space before starting any download work
+    if disk_full or not check_disk_space(output_dir):
+        return ('failed', display_name, 'Disk full — download stopped')
+
     # Now that we know we need to download, get high-res metadata
     track_name = csv_track_name
     image_url = csv_image_url
@@ -279,6 +313,11 @@ def download_track(row, output_dir):
     except Exception as e:
         if os.path.exists(temp_mp3): os.remove(temp_mp3)
         err = str(e)
+        if 'No space left' in err or 'Errno 28' in err:
+            global disk_full
+            disk_full = True
+            print(f"\n  ⛔ DISK FULL — stopping downloads. Free up space and re-run.")
+            return ('failed', display_name, 'Disk full')
         with open(FAILED_LOG, "a", encoding="utf-8") as f:
             f.write(f"{artists} - {track_name} | Error: {err}\n")
         return ('failed', display_name, err)
@@ -328,6 +367,9 @@ def process_csv(csv_path, base_output_dir, threads=None):
         print(f"  ✅ Downloaded : {len(ok)}")
         print(f"  [-] Skipped   : {len(skipped)} (already existed)")
         print(f"  ❌ Failed     : {len(failed)}")
+        if disk_full:
+            print(f"\n  ⛔ WARNING: Disk ran out of space mid-download.")
+            print(f"     Free up space and re-run — already downloaded songs will be skipped.")
         if failed:
             print(f"\n  Failed tracks:")
             for name, err in failed:
