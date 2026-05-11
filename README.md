@@ -1,4 +1,4 @@
-# 🎵 Spotify to MP3 Downloader v1.2 (Portable)
+# 🎵 Spotify to MP3 Downloader v1.3 (Portable)
 
 > **"The ultimate digital prepper tool for your music collection."**
 > High-speed downloads, official Spotify metadata, and a stealthy engine that keeps you under the radar. 
@@ -25,13 +25,19 @@ A professional, high-speed tool to download your Spotify playlists as high-quali
 5.  **Customize**: Use the **[D]** option to select your download folder.
 6.  **Select**: Choose a playlist or select **[A]** to download everything!
 
-## ✨ New in v1.2
+## ✨ New in v1.3
+
+- **Interactive First-Run Guide**: If no playlists are found, the app now shows a step-by-step guide with direct links to Exportify.
+- **In-App Refresh**: Added a `[R] Refresh` option to the menu so you can add new CSV files without restarting the app.
+- **Resilient Startup**: Fixed a critical `NameError` crash and optimized imports for faster, more stable launching.
+- **Repo Integrity**: Added `.gitkeep` files to ensure the `downloads` and `backup` folders are preserved when cloning the repo.
+
+## ✨ Previous v1.2 Features
 
 - **YouTube Music Engine**: Uses `ytmsearch` to prioritize official studio/album tracks over music videos (no more cinematic intros or sound effects).
 - **Spotify oEmbed Metadata**: Fetches official "Clean Titles" and high-res 640x640 artwork directly from Spotify.
 - **High-Fidelity Audio**: Upgraded to 320kbps MP3 encoding for audiophile quality.
 - **Stealth Mode**: Randomized "Human-like" pauses to prevent YouTube IP bans on large (10k+) collections.
-- **Instant Start**: Switched to a one-folder build for immediate application opening.
 - **Persistence**: Automatically embeds the Spotify Track URI in the MP3 comments for future-proof offline storage.
 - **Failure Logging**: Generates a `failed_songs.txt` report if any tracks are missing or blocked.
 
