@@ -223,6 +223,7 @@ def download_track(row, output_dir):
     """Downloads and tags a single track atomically.
     Returns a tuple: ('ok' | 'skipped' | 'failed', display_name, error_msg)
     """
+    global disk_full
     csv_track_name = row.get('Track Name', 'Unknown Track')
     artists = row.get('Artist Name(s)', 'Unknown Artist')
     album = row.get('Album Name', '')
@@ -271,7 +272,6 @@ def download_track(row, output_dir):
         }],
         'quiet': True,
         'no_warnings': True,
-        'noprogress': True,      # Suppress download % lines — prevents terminal freeze
         'retries': 10,           # Retry on connection resets before giving up
         'fragment_retries': 10,  # Retry individual fragments (helps with ConnectionResetError)
     }
@@ -314,7 +314,6 @@ def download_track(row, output_dir):
         if os.path.exists(temp_mp3): os.remove(temp_mp3)
         err = str(e)
         if 'No space left' in err or 'Errno 28' in err:
-            global disk_full
             disk_full = True
             print(f"\n  ⛔ DISK FULL — stopping downloads. Free up space and re-run.")
             return ('failed', display_name, 'Disk full')
